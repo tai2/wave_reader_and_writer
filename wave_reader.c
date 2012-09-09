@@ -24,7 +24,7 @@ static int
 read_byte(FILE *fp, unsigned char *out)
 {
     if (1 > fread(out, 1, 1, fp)) {
-        return feof(fp);
+        return feof(fp) ? 0 : -1;
     }
     return 1;
 }
@@ -32,12 +32,13 @@ read_byte(FILE *fp, unsigned char *out)
 static int
 read_int32_b(FILE *fp, int *out)
 {
+    int result;
     unsigned char a, b, c, d;
 
-    if (!read_byte(fp, &a)) return 0;
-    if (!read_byte(fp, &b)) return 0;
-    if (!read_byte(fp, &c)) return 0;
-    if (!read_byte(fp, &d)) return 0;
+    if ((result=read_byte(fp, &a)) != 1) return result;
+    if ((result=read_byte(fp, &b)) != 1) return result;
+    if ((result=read_byte(fp, &c)) != 1) return result;
+    if ((result=read_byte(fp, &d)) != 1) return result;
 
     *out = (a<<24) | (b<<16) | (c<<8) | (d<<0);
     return 1;
@@ -46,12 +47,13 @@ read_int32_b(FILE *fp, int *out)
 static int
 read_int32_l(FILE *fp, int *out)
 {
+    int result;
     unsigned char a, b, c, d;
 
-    if (!read_byte(fp, &a)) return 0;
-    if (!read_byte(fp, &b)) return 0;
-    if (!read_byte(fp, &c)) return 0;
-    if (!read_byte(fp, &d)) return 0;
+    if ((result=read_byte(fp, &a)) != 1) return result;
+    if ((result=read_byte(fp, &b)) != 1) return result;
+    if ((result=read_byte(fp, &c)) != 1) return result;
+    if ((result=read_byte(fp, &d)) != 1) return result;
 
     *out = (d<<24) | (c<<16) | (b<<8) | (a<<0);
     return 1;
@@ -60,10 +62,11 @@ read_int32_l(FILE *fp, int *out)
 static int
 read_int16_l(FILE *fp, int *out)
 {
+    int result;
     unsigned char a, b;
 
-    if (!read_byte(fp, &a)) return 0;
-    if (!read_byte(fp, &b)) return 0;
+    if ((result=read_byte(fp, &a)) != 1) return result;
+    if ((result=read_byte(fp, &b)) != 1) return result;
 
     *out = (b<<8) | (a<<0);
     return 1;
@@ -72,10 +75,11 @@ read_int16_l(FILE *fp, int *out)
 static int
 read_wave_chunk(struct wave_reader *wr, wave_reader_error *error)
 {
+    int result;
     int sub1_id, sub1_len, sub2_id, sub2_len, byte_rate, block_align;
 
-    if (!read_int32_b(wr->fp, &sub1_id)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int32_b(wr->fp, &sub1_id)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
@@ -84,43 +88,43 @@ read_wave_chunk(struct wave_reader *wr, wave_reader_error *error)
         return 0;
     }
 
-    if (!read_int32_l(wr->fp, &sub1_len)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int32_l(wr->fp, &sub1_len)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int16_l(wr->fp, &wr->format)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int16_l(wr->fp, &wr->format)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int16_l(wr->fp, &wr->num_channels)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int16_l(wr->fp, &wr->num_channels)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int32_l(wr->fp, &wr->sample_rate)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int32_l(wr->fp, &wr->sample_rate)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int32_l(wr->fp, &byte_rate)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int32_l(wr->fp, &byte_rate)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int16_l(wr->fp, &block_align)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int16_l(wr->fp, &block_align)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int16_l(wr->fp, &wr->sample_bits)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int16_l(wr->fp, &wr->sample_bits)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
-    if (!read_int32_b(wr->fp, &sub2_id)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int32_b(wr->fp, &sub2_id)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
@@ -129,8 +133,8 @@ read_wave_chunk(struct wave_reader *wr, wave_reader_error *error)
         return 0;
     }
 
-    if (!read_int32_l(wr->fp, &sub2_len)) {
-        *error = WR_IO_ERROR;
+    if ((result=read_int32_l(wr->fp, &sub2_len)) != 1) {
+        *error = result == 0 ? WR_BAD_CONTENT : WR_IO_ERROR;
         return 0;
     }
 
